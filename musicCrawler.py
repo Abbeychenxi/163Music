@@ -45,8 +45,8 @@ class MusicCrawl(Crawler):
         return self._query(document)(dom)
 
     def process_tasks(self, task=tuple):
-        i, j = task
-        text = j(i).encode('utf-8')
+        url, handler = task
+        text = handler(url).encode('utf-8')
         print text
         self.get_target(text, dom="")
 
