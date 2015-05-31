@@ -1,21 +1,8 @@
-import requests
-from pyquery import PyQuery
+from crawler import Crawler
 
 
 START_URL = 'http://music.163.com'
 PLAYLISTS_URL = 'http://music.163.com/discover/playlist'
-
-
-class Crawler(object):
-    def __init__(self, start_url):
-        self._s = requests.Session()
-        self._s.get(start_url)
-
-    def _crawl(self, url):
-        return self._s.get(url).text
-
-    def _query(slef, document):
-        return PyQuery(document)
 
 
 class MusicCrawl(Crawler):
