@@ -1,12 +1,9 @@
 import requests
 from pyquery import PyQuery
-from celery import Celery
 
 
 START_URL = 'http://music.163.com'
 PLAYLISTS_URL = 'http://music.163.com/discover/playlist'
-
-redis = Celery('playlist', broker='redis://local')
 
 
 class Crawler(object):
@@ -29,7 +26,6 @@ class MusicCrawl(Crawler):
     def get_playLists(self, url=PLAYLISTS_URL):
         return self._crawl(url)
 
-    @redis.task
     def get_playList(self, url):
         url = START_URL + url
         return (url, self._crawl)
@@ -38,7 +34,7 @@ class MusicCrawl(Crawler):
         for index in self._query(document)(dom):
             if index.attrib['class'] == 'msk':
                 self.tasks.append(
-                    self.get_playList(self, index.attrib['href'])
+                    self.get_playList(index.attrib['href'])
                     )
 
     def get_target(self, document, dom=None):
