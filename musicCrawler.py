@@ -1,8 +1,14 @@
+import re
+from multiprocessing import Pool
+
+
 from crawler import Crawler
 
 
 START_URL = 'http://music.163.com'
-PLAYLISTS_URL = 'http://music.163.com/discover/playlist'
+PLAYLIST_URL = 'http://music.163.com/discover/playlist'
+USER_URL = 'http://music.163.com/usr/home?id='
+MUSIC_URL = 'http://music.163.com/song?id='
 
 
 class MusicCrawl(Crawler):
@@ -10,7 +16,7 @@ class MusicCrawl(Crawler):
         Crawler.__init__(self, start_url)
         self.tasks = []
 
-    def get_playLists(self, url=PLAYLISTS_URL):
+    def get_playLists(self, url=PLAYLIST_URL):
         return self._crawl(url)
 
     def get_playList(self, url):
@@ -24,14 +30,40 @@ class MusicCrawl(Crawler):
                     self.get_playList(index.attrib['href'])
                     )
 
-    def get_target(self, document, dom=None):
-        return self._query(document)(dom)
+    def get_target(self, document):
+        dom = self._query(document)
+        title = dom("h2.f-ff2.f-brk").text()
+        print(title)
+        authorInfo = dom("div.user.f-cb a.s-fc7")
+        id = re.search('\d+', authorInfo.attr['href']).group()
+        author = (authorInfo.text(), id)
+        print(author)
+        collection = dom('div.btns.f-cb.j-action a i').text().split(' ')[1:]
+        collection = [re.search('\d+', i).group() for i in collection]
+        print(collection)
+        tags = dom('div.tags.f-cb a').text()
+        print(tags)
+        description = dom('div.cntc p.intr.f-brk').text()
+        print(description)
+        playNum = dom('strong.s-fc6.j-play-count').text()
+        print(playNum)
+        listLen = re.search('\d+', dom('span.sub.s-fc3.j-track-count').text()).group()
+        print(listLen)
+        musicList = dom('span.txt a')
+        musics = []
+        for i in musicList:
+            if i.attrib['href'].startswith('/song?id='):
+                musics.append(re.search('\d+', i.attrib['href']).group())
+        print(musics)
+
+    def assign_task(self):
+        pool = Pool(processes=4)
+        pool.map(self.process_tasks, self.tasks)
 
     def process_tasks(self, task=tuple):
         url, handler = task
         text = handler(url).encode('utf-8')
-        print text
-        self.get_target(text, dom="")
+        self.get_target(text)
 
 
 def main():
@@ -39,8 +71,7 @@ def main():
     res = c.get_playLists()
     text = res.encode('utf-8')
     c.get_id(text, "a[href*=\/playlist\?id]")
-    i, j = c.tasks[0]
-    print j(i).encode('utf-8')
+    c.assign_task()
 
 
 if __name__ == '__main__':

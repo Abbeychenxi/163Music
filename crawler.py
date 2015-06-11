@@ -10,5 +10,7 @@ class Crawler(object):
     def _crawl(self, url):
         return self._s.get(url).text
 
-    def _query(slef, document):
+    def _query(self, document):
         return PyQuery(document)
+
+
