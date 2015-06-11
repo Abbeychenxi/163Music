@@ -12,5 +12,3 @@ class Crawler(object):
 
     def _query(self, document):
         return PyQuery(document)
-
-
